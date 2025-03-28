@@ -2,11 +2,9 @@ require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const multer = require('./config/multerConfig');
-const cors = require('cors');
+const uploadRoutes = require('./routes/uploadRoutes');
 
 const app = express();
-app.use(express.json());
-app.use(cors());
 
 // Serve Uploaded Files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -22,26 +20,14 @@ app.get('/', (req, res) => {
   `);
 });
 
-// Upload Route (Max 2 Files)
-app.post('/upload', multer.array('resume', 2), (req, res) => {
-  if (!req.files || req.files.length === 0) {
-    return res.status(400).json({ error: 'No files uploaded' });
-  }
-  res.status(200).json({
-    message: 'Resume(s) uploaded successfully!',
-    files: req.files
-  });
-});
+// Use Upload Routes
+app.use('/upload', uploadRoutes);
 
 // Error Handler
 app.use((err, req, res, next) => {
   console.error(err.message);
   res.status(500).json({ error: err.message });
 });
-
-// Routes
-const resumeRoutes = require("./routes/resumeRoutes");
-app.use("/resumes", resumeRoutes);
 
 // Start the Server
 const PORT = process.env.PORT || 3000;
