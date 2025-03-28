@@ -2,8 +2,11 @@ require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const multer = require('./config/multerConfig');
+const cors = require('cors');
 
 const app = express();
+app.use(express.json());
+app.use(cors());
 
 // Serve Uploaded Files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -35,6 +38,10 @@ app.use((err, req, res, next) => {
   console.error(err.message);
   res.status(500).json({ error: err.message });
 });
+
+// Routes
+const resumeRoutes = require("./routes/resumeRoutes");
+app.use("/resumes", resumeRoutes);
 
 // Start the Server
 const PORT = process.env.PORT || 3000;
