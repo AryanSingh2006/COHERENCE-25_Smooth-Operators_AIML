@@ -1,10 +1,9 @@
 const express = require("express");
+const multer = require("../config/multerConfig");
+const { extractResumeData } = require("../controllers/resumeController");
+
 const router = express.Router();
-const resumeController = require("../controllers/resumeController");
-const multer = require("multer");
 
-const upload = multer({ dest: "uploads/" });
-
-router.post("/upload", upload.single("resume"), resumeController.uploadResume);
+router.post("/upload", multer.single("resume"), extractResumeData);
 
 module.exports = router;

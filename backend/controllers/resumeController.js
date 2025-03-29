@@ -1,29 +1,28 @@
-const multer = require("multer");
 const path = require("path");
-const fs = require("fs");
+const parsePDF = require("../services/pdfParser");
 
-// Upload resume and process it
-exports.uploadResume = async (req, res) => {
-    try {
-        const resumePath = req.file.path;
-
-        // Read resume text (assuming it's a TXT or PDF)
-        const resumeText = fs.readFileSync(resumePath, "utf8");
-
-        // Convert resume text to input format for ML model
-        const inputData = processTextToVector(resumeText);
-
-        // Get prediction from the ML model
-        const prediction = await predict(inputData);
-
-        res.json({ prediction });
-    } catch (error) {
-        console.error("Error processing resume:", error);
-        res.status(500).json({ error: "Error processing resume" });
+async function extractResumeData(req, res) {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "No file uploaded" });
     }
-};
 
-// Function to process text to vector (dummy example)
-function processTextToVector(text) {
-    return text.split(" ").map(word => word.length).slice(0, 100);  // Example: word lengths as features
+    const filePath = path.join(__dirname, "../uploads", req.file.filename);
+    const text = await parsePDF(filePath);
+
+    // Extract key details (Regex-based for now)
+    const emailRegex = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/;
+    const emailMatch = text.match(emailRegex);
+    const email = emailMatch ? emailMatch[0] : "Not found";
+
+    res.status(200).json({
+      message: "Resume processed successfully",
+      extractedData: { email, text },
+    });
+
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 }
+
+module.exports = { extractResumeData };
